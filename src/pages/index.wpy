@@ -1,0 +1,76 @@
+<style lang="less">
+.userinfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.userinfo-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+}
+
+.userinfo-nickname {
+  color: #aaa;
+}
+</style>
+<template>
+  <view class="container">
+  </view>
+</template>
+
+<script>
+import wepy from 'wepy';
+import { connect } from 'wepy-redux';
+// import Toast from 'wepy-com-toast';
+import Storage from '../utils/storage.js';
+@connect({
+  num(state) {
+    return state.counter.num;
+  },
+  asyncNum(state) {
+    return state.counter.asyncNum;
+  },
+  sumNum(state) {
+    return state.counter.num + state.counter.asyncNum;
+  }
+})
+export default class Index extends wepy.page {
+  config = {
+    navigationBarTitleText: '基本编程'
+  };
+  data = {
+  };
+
+  computed = {
+    now() {
+      return +new Date();
+    }
+  };
+  methods = {
+    bindGetUserInfo(e) {
+      Storage.set('userInfo', e.detail.userInfo);
+    }
+  };
+
+  events = {
+    'index-emit': (...args) => {
+      let $event = args[args.length - 1];
+      console.log(
+        `${this.$name} receive ${$event.name} from ${$event.source.$name}`
+      );
+    }
+  };
+
+  onLoad() {
+    let self = this;
+    this.$parent.getUserInfo(function(userInfo) {
+      if (userInfo) {
+        self.userInfo = userInfo;
+      }
+      self.$apply();
+    });
+  }
+}
+</script>

@@ -1,0 +1,148 @@
+<template>
+<view>
+  <view wx:if="{{authSetting&&!authSetting['scope.userInfo']}}"  class="getUserInfoContainer" >
+    <button class='getUserInfoBtn' open-type="getUserInfo" bindgetuserinfo="bindGetUserInfo">授权登录</button>
+  </view>
+  <view wx:else class='course-container' @tap="tap" style="background: url('../resource/images/course_list_bg.jpg') no-repeat top center;background-size:100% auto;">
+	<image src='../resource/images/course_footer_bg.png' mode='widthFix' class="listBg"    />
+  <view class='course-wrap-container'  >
+		<view class='course-title' >
+		  <image src='../resource/images/course_title.png' />
+	   </view>
+	   <view class='course-list-container' >
+       <repeat for="{{courseList}}" item="item">
+        <courseItem :courseItem="item"></courseItem>
+      </repeat>
+	   </view>
+	</view>
+</view>
+</view>
+</template>
+<style lang="less">
+.getUserInfoContainer {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .getUserInfoBtn {
+    width: 65%;
+  }
+}
+
+.course-container {
+  z-index: -1;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+.course-wrap-container {
+  background-color: rgba(255, 255, 255, 0.4);
+  padding: 0px 15px;
+  margin: 0px 20px;
+  padding-bottom: 1px;
+  position: relative;
+  z-index: 3;
+}
+.listBg {
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  width: 100%;
+  height: 75px;
+  z-index: 1;
+}
+.course-title {
+  padding: 16px 25px;
+  image {
+    display: block;
+    width: 207px;
+    height: 55px;
+    margin: 0px auto;
+  }
+}
+.course-list-container {
+}
+</style>
+
+<script>
+import wepy from 'wepy';
+import { connect } from 'wepy-redux';
+import CourseItem from '../components/courseItem';
+import { fetchCourse } from '../store/actions/course.js';
+import { getUserInfo } from '../store/actions/global.js';
+import { SETAUTHSETTING } from '../store/types/global.js';
+import request from '../utils/request.js';
+@connect(
+  {
+    courseList(state) {
+      return state.course.list;
+    },
+    authSetting(state) {
+      return state.global.authSetting;
+    },
+    token(state) {
+      return state.global.token;
+    }
+  },
+  {
+    fetchCourse,
+    getUserInfo,
+    setAuthSetting: SETAUTHSETTING
+  }
+)
+export default class Course extends wepy.page {
+  config = {
+    navigationBarTitleText: '基本编程'
+  };
+  components = {
+    courseItem: CourseItem
+  };
+  watch = {
+    authSetting(oldValue, newValue) {
+      console.log('oldValue', oldValue);
+      console.log('newValue', newValue);
+      if (newValue && newValue['scope.userInfo'] && !this.fetchUser) {
+        wepy.getUserInfo().then(data => this.userLogin(data.userInfo));
+      }
+      if (
+        !newValue &&
+        oldValue &&
+        oldValue['scope.userInfo'] &&
+        !this.fetchUser
+      ) {
+        wepy.getUserInfo().then(data => this.userLogin(data.userInfo));
+      }
+    }
+  };
+  methods = {
+    async bindGetUserInfo(e) {
+      this.methods.setAuthSetting({
+        'scope.userInfo': true
+      });
+    },
+    tap(){
+      console.log(11)
+    }
+  };
+  async userLogin(userInfo) {
+    const res = await wepy.login();
+    if (res.errMsg !== 'login:ok') return wepy.showToast(res.errMsg, 'warn');
+    const { nickName: nick, gender: sex, avatarUrl: pic } = userInfo;
+    await this.methods.getUserInfo({
+      code: res.code,
+      nick,
+      sex,
+      pic
+    });
+    await this.methods.fetchCourse();
+  }
+
+  onLoad() {
+    console.log('onLoad', this.authSetting);
+    if (this.authSetting && this.authSetting['scope.userInfo']) {
+      this.fetchUser = true;
+      wepy.getUserInfo().then(data => this.userLogin(data.userInfo));
+    }
+  }
+}
+</script>

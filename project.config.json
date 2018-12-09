@@ -1,0 +1,17 @@
+{
+	"description": "积木编程小程序",
+	"setting": {
+		"urlCheck": false,
+		"es6": false,
+		"postcss": false,
+		"minified": false,
+		"newFeature": true,
+		"autoAudits": false
+	},
+	"compileType": "miniprogram",
+	"appid": "wx9665d33fa2e40241",
+	"projectname": "jimu",
+	"miniprogramRoot": "dist/",
+	"libVersion": "2.2.5",
+	"condition": {}
+}
